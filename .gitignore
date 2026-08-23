@@ -1,0 +1,22 @@
+# Dépendances Node.js
+node_modules/
+
+# Fichiers d'environnement (Mots de passe et secrets)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Journaux d'erreurs (Logs)
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+*.log
+
+# Système d'exploitation et éditeurs
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
