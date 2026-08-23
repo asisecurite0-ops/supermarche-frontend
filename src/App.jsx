@@ -4,8 +4,7 @@ import Login from './components/Login';
 import PremierCompte from './components/PremierCompte';
 import DashboardEmploye from './components/employe/DashboardEmploye';
 import Dashboard from './components/patron/Dashboard';
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://supermarche-backend.onrender.com';
+import { fetchApi } from './config/api';
 
 export default function App() {
     const [licenceState, setLicenceState] = useState({
@@ -19,13 +18,12 @@ export default function App() {
     const [premierCompteExiste, setPremierCompteExiste] = useState(false);
     const [utilisateur, setUtilisateur] = useState(null);
 
-    // Vérification de la licence auprès du backend Cloud
+    // Vérification de la licence auprès du backend Cloud (Render)
     const verifierLicence = useCallback(async () => {
         try {
-            const res = await fetch(`${API_URL}/api/licence/verifier`);
-            const data = await res.json();
+            const data = await fetchApi('/api/licence/verifier');
 
-            if (res.ok && data.autorise) {
+            if (data && data.autorise) {
                 setLicenceState({
                     chargement: false,
                     autorise: true,
@@ -39,7 +37,7 @@ export default function App() {
                     autorise: false,
                     mode: 'BLOQUE',
                     joursRestants: 0,
-                    erreur: data.erreur || "Licence non valide ou expirée."
+                    erreur: data?.erreur || "Licence non valide ou expirée."
                 });
             }
         } catch (err) {
@@ -57,9 +55,8 @@ export default function App() {
     // Vérification des comptes existants sur MongoDB Atlas
     const verifierComptes = useCallback(async () => {
         try {
-            const res = await fetch(`${API_URL}/api/auth/initialise`);
-            const data = await res.json();
-            if (res.ok) {
+            const data = await fetchApi('/api/auth/initialise');
+            if (data) {
                 setPremierCompteExiste(Boolean(data.compteExiste));
             }
         } catch (err) {
@@ -129,14 +126,14 @@ export default function App() {
                 <Login onLoginSuccess={(user) => setUtilisateur(user)} />
             )}
 
-            {utilisateur && utilisateur.role === 'EMPLOYE' && (
+            {utilisateur && (utilisateur.role === 'EMPLOYE' || utilisateur.role === 'CAISSIER') && (
                 <DashboardEmploye 
                     utilisateur={utilisateur} 
                     onLogout={() => setUtilisateur(null)} 
                 />
             )}
 
-            {utilisateur && utilisateur.role === 'PATRON' && (
+            {utilisateur && (utilisateur.role === 'PATRON' || utilisateur.role === 'GERANT') && (
                 <Dashboard 
                     utilisateur={utilisateur} 
                     onLogout={() => setUtilisateur(null)} 
@@ -144,7 +141,7 @@ export default function App() {
                 />
             )}
 
-            {utilisateur && !['EMPLOYE', 'PATRON'].includes(utilisateur.role) && (
+            {utilisateur && !['EMPLOYE', 'CAISSIER', 'PATRON', 'GERANT'].includes(utilisateur.role) && (
                 <div style={styles.unknownRoleContainer}>
                     <h2>Rôle non reconnu. Veuillez contacter le support.</h2>
                     <button onClick={() => setUtilisateur(null)}>Retour à la connexion</button>
